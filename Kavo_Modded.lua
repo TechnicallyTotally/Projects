@@ -1492,7 +1492,7 @@
 							wait(0)
 							viewDe = false
 						end
-					end
+					end)
 					task.spawn(callback, defaultvalue)
 					if flag then
 					  GuiLibrary.Flags[flag] = val.Text
