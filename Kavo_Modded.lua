@@ -1249,12 +1249,15 @@
 				function Elements.NewSlider(argstable)
 					local slidInf = argstable["Name"]
 					local slidTip = argstable["InfoText"] or ""
-					local minvalue = argstable["Min"]
-					local maxvalue = argstable["Max"]
+					local minvalue = argstable["Min"] or 16
+					local maxvalue = argstable["Max"] or 500
 					
-					local defaultvalue = argstable["Default"] or 0
+					local defaultvalue = argstable["Default"] or 50
 					local flag = argstable["Flag"] or nil
 					local callback = argstable["Function"]
+          
+          defaultvalue = math.clamp(defaultvalue, minvalue, maxvalue)
+          local DefaultScale = (defaultvalue - minvalue) / (maxvalue - minvalue)
 
 					local sliderElement = Instance.new("TextButton")
 					local UICorner = Instance.new("UICorner")
@@ -1330,7 +1333,7 @@
 					sliderDrag.BackgroundColor3 = themeList.SchemeColor
 					sliderDrag.BorderColor3 = Color3.fromRGB(74, 99, 135)
 					sliderDrag.BorderSizePixel = 0
-					sliderDrag.Size = UDim2.new(-0.671140969, 100,1,0)
+					sliderDrag.Size = UDim2.new(DefaultScale, 100,1,0)
 
 					UICorner_3.Parent = sliderDrag
 
@@ -1353,7 +1356,7 @@
 					val.Position = UDim2.new(0.352386296, 0, 0.272727281, 0)
 					val.Size = UDim2.new(0, 41, 0, 14)
 					val.Font = Enum.Font.GothamSemibold
-					val.Text = minvalue
+					val.Text = tostring(defaultvalue)
 					val.TextColor3 = themeList.TextColor
 					val.TextSize = 14.000
 					val.TextTransparency = 1.000
@@ -1489,7 +1492,8 @@
 							wait(0)
 							viewDe = false
 						end
-					end)
+					end
+					task.spawn(callback, defaultvalue)
 					if flag then
 					  GuiLibrary.Flags[flag] = val.Text
 					end
