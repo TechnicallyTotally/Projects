@@ -983,6 +983,7 @@
 				function Elements.NewToggle(argstable)
 					local tname = argstable["Name"]
 					local nTip = argstable["InfoText"] or ""
+					local def = argstable["Default"] or false
 					local flag = argstabkle["Flag"] or nil
 					local callback = argstable["Function"]
 					local TogFunction = {}
@@ -1173,7 +1174,19 @@
 							hovering = false
 						end
 					end)
-
+          if def then
+							toggled = true
+							game.TweenService:Create(img, TweenInfo.new(0.11, Enum.EasingStyle.Linear,Enum.EasingDirection.In), {
+								ImageTransparency = 0
+							}):Play()
+							pcall(callback, toggled)
+						else
+							toggled = false
+							game.TweenService:Create(img, TweenInfo.new(0.11, Enum.EasingStyle.Linear,Enum.EasingDirection.In), {
+								ImageTransparency = 1
+							}):Play()
+							
+					end
 					coroutine.wrap(function()
 						while wait() do
 							if not hovering then
@@ -1208,6 +1221,9 @@
 							viewDe = false
 						end
 					end)
+					if flag then
+					  GuiLibrary.Flags[flag] = toggled
+					end
 					function TogFunction:UpdateToggle(newText, isTogOn)
 						isTogOn = isTogOn or toggle
 						if newText ~= nil then 
