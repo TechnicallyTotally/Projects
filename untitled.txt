@@ -784,7 +784,6 @@ function lib:Window(text, preset, closebind)
                     end
                 end
             )()
-
 local function move(input)
     local pos =
         UDim2.new(
@@ -813,28 +812,36 @@ local function IsMobile()
     return UserInputService.TouchEnabled
 end
 
-local function onTouchStarted(input, isProcessed)
-    if isProcessed then
-        return
-    end
-
+local function onTouchStarted(input, gameProcessedEvent)
     if IsMobile() and input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
-    elseif not IsMobile() and input.UserInputType == Enum.UserInputType.MouseButton1 then
+        gameProcessedEvent:Connect(function() end) -- Prevent other touch events from firing
+    end
+end
+
+local function onTouchEnded(input, gameProcessedEvent)
+    if IsMobile() and input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        gameProcessedEvent:Connect(function() end) -- Prevent other touch events from firing
+    end
+end
+
+local function onMouseButton1Down()
+    if not IsMobile() then
         dragging = true
     end
 end
 
-local function onTouchEnded(input, isProcessed)
-    if IsMobile() and input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    elseif not IsMobile() and input.UserInputType == Enum.UserInputType.MouseButton1 then
+local function onMouseButton1Up()
+    if not IsMobile() then
         dragging = false
     end
 end
 
 SlideCircle.InputBegan:Connect(onTouchStarted)
 SlideCircle.InputEnded:Connect(onTouchEnded)
+SlideCircle.MouseButton1Down:Connect(onMouseButton1Down)
+SlideCircle.MouseButton1Up:Connect(onMouseButton1Up)
 
 UserInputService.InputChanged:Connect(
     function(input)
@@ -856,16 +863,7 @@ if IsMobile() then
             end
         end
     )
-
-    UserInputService.TouchEnded:Connect(
-        function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end
-    )
 end
-
 
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
         end
