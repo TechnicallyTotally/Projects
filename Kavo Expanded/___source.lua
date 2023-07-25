@@ -1,17 +1,3 @@
---[[
-  Kavo ui library;
-    original by xheptc
-  end
-  
-  who made this?
-     luiztech TV for expanding functionality
-     and mobile supporting.
-  end
-  
-  more coming soon...
-  
-]]
-
 local Kavo = {}
 
 local tween = game:GetService("TweenService")
@@ -22,23 +8,19 @@ local run = game:GetService("RunService")
 local Utility = {}
 local Objects = {}
 function Kavo:DraggingEnabled(frame, parent)
+        
     parent = parent or frame
-
-    -- Stolen from wally or kiriot, kek
+    
+    -- stolen from wally or kiriot, kek
     local dragging = false
-    local dragInput, touchId, mousePos, framePos
+    local dragInput, mousePos, framePos
 
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                mousePos = input.Position
-            elseif input.UserInputType == Enum.UserInputType.Touch then
-                touchId = input.Touch.Id
-                mousePos = input.Position
-            end
+            mousePos = input.Position
             framePos = parent.Position
-
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -48,24 +30,15 @@ function Kavo:DraggingEnabled(frame, parent)
     end)
 
     frame.InputChanged:Connect(function(input)
-        if dragging then
-            if input.UserInputType == Enum.UserInputType.MouseMovement then
-                dragInput = input
-            elseif input.UserInputType == Enum.UserInputType.Touch and input.Touch.Id == touchId then
-                dragInput = input
-            end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
         end
     end)
 
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    input.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - mousePos
-            parent.Position = UDim2.new(
-                framePos.X.Scale,
-                framePos.X.Offset + delta.X,
-                framePos.Y.Scale,
-                framePos.Y.Offset + delta.Y
-            )
+            parent.Position  = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
         end
     end)
 end
@@ -154,7 +127,9 @@ local SettingsT = {
 }
 
 local Name = "KavoConfig.JSON"
-
+if not isfile("KavoConfig.JSON") then
+   writefile(Name, "{}") 
+end
 pcall(function()
 
 if not pcall(function() readfile(Name) end) then
@@ -174,11 +149,7 @@ function Kavo:ToggleUI()
     end
 end
 
-function Kavo:NewWindow(argstable)
-    
-    local kavName = argstable.Title or "Kavo Ui"
-    local requireHide = argstable.HideButton or false
-    local themeList = argstable.Theme or {}
+function Kavo.CreateLib(kavName, themeList, hidetoggle)
     if not themeList then
         themeList = themes
     end
@@ -214,9 +185,12 @@ function Kavo:NewWindow(argstable)
         end
     end
 
+    themeList = themeList or {}
+    local selectedTab
     
-    local selectedTab 
+    hidetoggle = hidetoggle or false
     
+    kavName = kavName or "Library"
     table.insert(Kavo, kavName)
     for i,v in pairs(game.CoreGui:GetChildren()) do
         if v:IsA("ScreenGui") and v.Name == kavName then
@@ -259,6 +233,7 @@ function Kavo:NewWindow(argstable)
     ScreenGui.ResetOnSpawn = false
 
     Main.Name = "Main"
+    Main.Active = true
     Main.Parent = ScreenGui
     Main.BackgroundColor3 = themeList.Background
     Main.ClipsDescendants = true
@@ -321,7 +296,39 @@ function Kavo:NewWindow(argstable)
         wait(1)
         ScreenGui:Destroy()
     end)
-
+    if hidetoggle then
+        local hideButton = Instance.new("ImageButton")
+        hideButton.Name = "HideButton"
+        hideButton.Parent = MainHeader
+        hideButton.BackgroundTransparency = 1
+        hideButton.Position = UDim2.new(0.9, 0, 0.2, 0)
+        hideButton.Size = UDim2.new(0, 24, 0, 24)
+        hideButton.Image = "rbxassetid://7743874974"
+        hideButton.Visible = true
+        
+        local unhideButton = Instance.new("ImageButton")
+        unhideButton.Name = "UnhideButton"
+        unhideButton.Parent = ScreenGui
+        unhideButton.BackgroundTransparency = 1
+        unhideButton.Position = UDim2.new(0.5, -50, 0.5, -25)
+        unhideButton.Size = UDim2.new(0, 100, 0, 50)
+        unhideButton.Image = "rbxassetid://7743871739"
+        unhideButton.Visible = false
+        
+        local function hideGui()
+            game.TweenService:Create(Main, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+            unhideButton.Visible = true
+        end
+        
+        local function unhideGui()
+            game.TweenService:Create(Main, TweenInfo.new(0.5), { BackgroundTransparency = 0 }):Play()
+            unhideButton.Visible = false
+        end
+        
+        hideButton.MouseButton1Click:Connect(hideGui)
+        unhideButton.MouseButton1Click:Connect(unhideGui)
+    end
+        
     MainSide.Name = "MainSide"
     MainSide.Parent = Main
     MainSide.BackgroundColor3 = themeList.Header
@@ -371,120 +378,8 @@ function Kavo:NewWindow(argstable)
     infoContainer.ClipsDescendants = true
     infoContainer.Position = UDim2.new(0.299047619, 0, 0.874213815, 0)
     infoContainer.Size = UDim2.new(0, 368, 0, 33)
+
     
-    local function LoadFrameWithTween()
-        Main.Visible = true
-        Main.Size = UDim2.new(0, 0, 0, 0)
-        Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-        Main.BackgroundTransparency = 1
-
-        game.TweenService:Create(Main, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 525, 0, 318),
-            Position = UDim2.new(0.336503863, 0, 0.275485456, 0),
-            BackgroundTransparency = 0
-        }):Play()
-    end
-    
-    local function IntroAndLoad()
-        -- Set up intro elements
-        local introText = Instance.new("TextLabel")
-        introText.Name = "IntroText"
-        introText.Parent = Main
-        introText.BackgroundColor3 = themeList.Background
-        introText.BackgroundTransparency = 1
-        introText.BorderSizePixel = 0
-        introText.Position = UDim2.new(0.5, 0, 0.5, 0)
-        introText.AnchorPoint = Vector2.new(0.5, 0.5)
-        introText.Size = UDim2.new(0, 0, 0, 0)
-        introText.Font = Enum.Font.Gotham
-        introText.Text = "Welcome to the".. kavName
-        introText.TextColor3 = themeList.TextColor
-        introText.TextSize = 16
-
-        -- Perform intro animation
-        game.TweenService:Create(introText, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 200, 0, 50),
-            Position = UDim2.new(0.5, -100, 0.5, -25),
-            BackgroundTransparency = 0.5
-        }):Play()
-
-        -- Wait for 3 seconds
-        wait(3)
-
-        -- Tween out intro text
-        game.TweenService:Create(introText, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            BackgroundTransparency = 1
-        }):Play()
-
-        -- Load the frame with a tween animation
-        LoadFrameWithTween()
-    end
-
-    -- Check if "intro" is set in the argstable
-    local introEnabled = argstable.Intro or false
-
-    -- Set Main frame invisible before the animation starts
-    Main.Visible = false
-
-    if introEnabled then
-        IntroAndLoad()
-    else
-        -- Load the frame directly without intro
-        LoadFrameWithTween()
-    end
-  if requireHide then
-    local hideButton = Instance.new("TextButton")
-    hideButton.Name = "HideButton"
-    hideButton.Parent = MainHeader
-    hideButton.BackgroundColor3 = themeList.Header
-    hideButton.BackgroundTransparency = 1
-    hideButton.BorderSizePixel = 0
-    hideButton.Position = UDim2.new(0.882, 0, 0.137999997, 0)
-    hideButton.Size = UDim2.new(0, 30, 0, 21)
-    hideButton.Font = Enum.Font.Gotham
-    hideButton.Text = "Hide"
-    hideButton.TextColor3 = themeList.TextColor
-    hideButton.TextSize = 14
-    hideButton.Visible = false
-
-    local function ToggleVisibility()
-        if Main.Visible then
-            game.TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-              Position = UDim2.new(0.5, 0, 0.5, 0),
-              Size = UDim2.new(0, 0, 0, 0),
-              BackgroundTransparency = 1
-            }):Play()
-            wait(0.5)
-            Main.Visible = false
-            hideButton.Visible = true
-            game.TweenService:Create(hideButton, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-               BackgroundTransparency = 0,
-               Position = UDim2.new(0.949999988, 0, 0.137999997, 0),
-               Size = UDim2.new(0, 21, 0, 21)
-            }):Play()
-        else
-            game.TweenService:Create(hideButton, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-               BackgroundTransparency = 1,
-               Position = UDim2.new(0.882, 0, 0.137999997, 0),
-               Size = UDim2.new(0, 30, 0, 21)
-            }):Play()
-            wait(0.5)
-            hideButton.Visible = false
-            Main.Visible = true
-            game.TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-               Position = UDim2.new(0.336503863, 0, 0.275485456, 0),
-               Size = UDim2.new(0, 525, 0, 318),
-               BackgroundTransparency = 0
-            }):Play()
-        end
-    end
-
-    hideButton.MouseButton1Click:Connect(function()
-       ToggleVisibility()
-    end)
-  end
     coroutine.wrap(function()
         while wait() do
             Main.BackgroundColor3 = themeList.Background
@@ -512,13 +407,11 @@ function Kavo:NewWindow(argstable)
 
     local first = true
 
-    function Tabs.NewTab(tabName, IconLa)
+    function Tabs:NewTab(tabName)
         tabName = tabName or "Tab"
-        IconLa = IconLa or ""
         local tabButton = Instance.new("TextButton")
         local UICorner = Instance.new("UICorner")
         local page = Instance.new("ScrollingFrame")
-        local iconLabel = Instance.new("ImageLabel")
         local pageListing = Instance.new("UIListLayout")
 
         local function UpdateSize()
@@ -575,15 +468,7 @@ function Kavo:NewWindow(argstable)
         UpdateSize()
         page.ChildAdded:Connect(UpdateSize)
         page.ChildRemoved:Connect(UpdateSize)
-        
-        iconLabel.Name = "IconLabel"
-        iconLabel.Parent = tabButton
-        iconLabel.Size = UDim2.new(0, 20, 0, 20) -- Adjust the size as needed
-        iconLabel.Position = UDim2.new(0, 5, 0.5, -10)
-        iconLabel.BackgroundTransparency = 1
-        iconLabel.Image = IconLa
-        
-        
+
         tabButton.MouseButton1Click:Connect(function()
             UpdateSize()
             for i,v in next, Pages:GetChildren() do
@@ -609,9 +494,6 @@ function Kavo:NewWindow(argstable)
             end 
             Utility:TweenObject(tabButton, {BackgroundTransparency = 0}, 0.2)
         end)
-        
-        
-        
         local Sections = {}
         local focusing = false
         local viewDe = false
@@ -729,16 +611,13 @@ function Kavo:NewWindow(argstable)
                 updateSectionFrame()
                 UpdateSize()
             local Elements = {}
-            function Elements:NewButton(argstable)
-                local bname = argstable.Name or "Button"
-                local tipINf = argstable.Desc or "Example"
-                local callback = argstable.Function or function() end
+            function Elements:NewButton(bname,tipINf, callback)
                 showLogo = showLogo or true
                 local ButtonFunction = {}
-                
-                local useDefaultOnclick = true
-                local customClickCallbacks = {}
-                
+                tipINf = tipINf or "Tip: Clicking this nothing will happen!"
+                bname = bname or "Click Me!"
+                callback = callback or function() end
+
                 local buttonElement = Instance.new("TextButton")
                 local UICorner = Instance.new("UICorner")
                 local btnInfo = Instance.new("TextLabel")
@@ -851,12 +730,7 @@ function Kavo:NewWindow(argstable)
 
                 btn.MouseButton1Click:Connect(function()
                     if not focusing then
-                        if useDefaultOnclick then
-                           callback()
-                        end
-                        for _, customCallback in ipairs(customClickCallbacks) do
-                            customCallback()
-                        end
+                        callback()
                         local c = sample:Clone()
                         c.Parent = btn
                         local x, y = (ms.X - c.AbsolutePosition.X), (ms.Y - c.AbsolutePosition.Y)
@@ -931,32 +805,17 @@ function Kavo:NewWindow(argstable)
                         btnInfo.TextColor3 = themeList.TextColor
                     end
                 end)()
-
-                function ButtonFunction:GetText()
-                    return btnInfo.Text
-                end
-            
-                function ButtonFunction:SetText(newText)
-                    btnInfo.Text = newText
-                end
-            
                 
-                
-                function ButtonFunction:OnClickCustom(customCallback)
-                   -- Add the custom click event handler to the table
-                   useDefaultOnclick = false;
-                   table.insert(customClickCallbacks, customCallback)
+                function ButtonFunction:UpdateButton(newTitle)
+                    btnInfo.Text = newTitle
                 end
-                
                 return ButtonFunction
             end
 
-            function Elements:NewTextBox(argstable)
-                local tname = argstable.Name or "Textbox"
-                local tTip = argstable.Desc or "Example"
-                local Def = argstable.Current or false
-                local callback = argstable.Function or function() end
-                
+            function Elements:NewTextBox(tname, tTip, callback)
+                tname = tname or "Textbox"
+                tTip = tTip or "Gets a value of Textbox"
+                callback = callback or function() end
                 local textboxElement = Instance.new("TextButton")
                 local UICorner = Instance.new("UICorner")
                 local viewInfo = Instance.new("ImageButton")
@@ -1017,13 +876,7 @@ function Kavo:NewWindow(argstable)
                 TextBox.Text = ""
                 TextBox.TextColor3 = themeList.SchemeColor
                 TextBox.TextSize = 12.000
-                
-                if def then
-                   Textbox.Text = def
-                else
-                   Textbox.Text = ""
-                end
-                
+
                 UICorner_2.CornerRadius = UDim.new(0, 4)
                 UICorner_2.Parent = TextBox
 
@@ -1155,16 +1008,12 @@ function Kavo:NewWindow(argstable)
                 end)()
             end 
 
-                function Elements:NewToggle(argstable)
-                    local tname = argstable.Name or "Toggle"
-                    local nTip = argstable.Desc or "Example"
-                    local defaultToggleState = argstable.Default or false  -- Default toggle state, defaults to "false"
-                    local callback = argstable.Function or function() end
+                function Elements:NewToggle(tname, nTip, callback)
                     local TogFunction = {}
-                    
-                    local shouldSave = argstable.Save or false
-                    
-                    local toggled = defaultToggleState
+                    tname = tname or "Toggle"
+                    nTip = nTip or "Prints Current Toggle State"
+                    callback = callback or function() end
+                    local toggled = false
                     table.insert(SettingsT, tname)
 
                     local toggleElement = Instance.new("TextButton")
@@ -1263,23 +1112,7 @@ function Kavo:NewWindow(argstable)
     
                     UICorner.CornerRadius = UDim.new(0, 4)
                     UICorner.Parent = moreInfo
-                    
-                    local function onToggledChanged(newToggled)
-                        pcall(callback, newToggled)
-                        if shouldSave then
-                           local success, error = pcall(function()
-                           local file = "ToggleStates_" .. tname .. ".txt"
-                           local content = "ToggleState=" .. tostring(newToggled)
-                           writefile(file, content)
-                        end)
-                        if not success then
-                           warn("Report This Problem: Failed to save toggle state:", error)
-                        end
-                        end
-                    end
-                    
-                    
-                    
+
                     local ms = game.Players.LocalPlayer:GetMouse()
 
                     if themeList.SchemeColor == Color3.fromRGB(255,255,255) then
@@ -1341,7 +1174,7 @@ function Kavo:NewWindow(argstable)
                                 c:Destroy()
                             end
                             toggled = not toggled
-                            onToggledChanged(toggled)
+                            pcall(callback, toggled)
                         else
                             for i,v in next, infoContainer:GetChildren() do
                                 Utility:TweenObject(v, {Position = UDim2.new(0,0,2,0)}, 0.2)
@@ -1412,30 +1245,26 @@ function Kavo:NewWindow(argstable)
                             game.TweenService:Create(img, TweenInfo.new(0.11, Enum.EasingStyle.Linear,Enum.EasingDirection.In), {
                                 ImageTransparency = 0
                             }):Play()
-                            onToggledChanged(toggled)
+                            pcall(callback, toggled)
                         else
                             toggled = false
                             game.TweenService:Create(img, TweenInfo.new(0.11, Enum.EasingStyle.Linear,Enum.EasingDirection.In), {
                                 ImageTransparency = 1
                             }):Play()
-                            onToggledChanged(toggled)
+                            pcall(callback, toggled)
                         end
                     end
-                    
-                    TogFunction:UpdateToggle(nil, defaultToggleState)
-                    
                     return TogFunction
             end
 
-            function Elements:NewSlider(argstable)
-                local slidInf = argstable.Name or "Slider"
-                local slidTip = argstable.Desc or "Example"
-                local maxvalue = argstable.Max or 500
-                local minvalue = argstable.Min or 16
-                local callback = argstable.Function or function() end
-                
-                local defaultValue = argstable.Default or minvalue  -- Default value for the slider
-                
+            function Elements:NewSlider(slidInf, slidTip, maxvalue, minvalue, callback)
+                slidInf = slidInf or "Slider"
+                slidTip = slidTip or "Slider tip here"
+                maxvalue = maxvalue or 500
+                minvalue = minvalue or 16
+                startVal = startVal or 0
+                callback = callback or function() end
+
                 local sliderElement = Instance.new("TextButton")
                 local UICorner = Instance.new("UICorner")
                 local togName = Instance.new("TextLabel")
@@ -1538,11 +1367,7 @@ function Kavo:NewWindow(argstable)
                 val.TextSize = 14.000
                 val.TextTransparency = 1.000
                 val.TextXAlignment = Enum.TextXAlignment.Right
-                
-                sliderDrag.Size = UDim2.new(((defaultValue - minvalue) / (maxvalue - minvalue)), 0, 1, 0)
-                do
-                    callback(defaultValue)
-                end
+
                 local moreInfo = Instance.new("TextLabel")
                 local UICorner = Instance.new("UICorner")
 
@@ -1676,15 +1501,13 @@ function Kavo:NewWindow(argstable)
                 end)        
             end
 
-            function Elements:NewDropdown(argstable)
+            function Elements:NewDropdown(dropname, dropinf, list, callback)
                 local DropFunction = {}
-                local dropname = argstable.Name or "Dropdown"
-                local list = argstable.List or {}
-                local dropinf = argstable.Desc or "Example"
-                local callback = argstable.Function or function() end
-                
-                local defaultOption = argstable.Default or dropname  -- Default value for the dropdown
-                
+                dropname = dropname or "Dropdown"
+                list = list or {}
+                dropinf = dropinf or "Dropdown info"
+                callback = callback or function() end   
+
                 local opened = false
                 local DropYSize = 33
 
@@ -1801,14 +1624,12 @@ function Kavo:NewWindow(argstable)
                 itemTextbox.Position = UDim2.new(0.0970000029, 0, 0.273000002, 0)
                 itemTextbox.Size = UDim2.new(0, 138, 0, 14)
                 itemTextbox.Font = Enum.Font.GothamSemibold
-                itemTextbox.Text = defaultOption
+                itemTextbox.Text = dropname
                 itemTextbox.RichText = true
                 itemTextbox.TextColor3 = themeList.TextColor
                 itemTextbox.TextSize = 14.000
                 itemTextbox.TextXAlignment = Enum.TextXAlignment.Left
-                
-                callback(itemTextbox.Text)
-                
+
                 viewInfo.Name = "viewInfo"
                 viewInfo.Parent = dropOpen
                 viewInfo.BackgroundTransparency = 1.000
@@ -2128,12 +1949,10 @@ function Kavo:NewWindow(argstable)
                 end
                 return DropFunction
             end
-            function Elements:NewKeybind(argstable)
-                local keynote = argstable.Name or "Keybind"
-                local keyinf = argstable.Desc or "Example"
-                local callback = argstable.Function or function() end
-                
-                local first = argstable.Key or Enum.KeyCode.E
+            function Elements:NewKeybind(keytext, keyinf, first, callback)
+                keytext = keytext or "KeybindText"
+                keyinf = keyinf or "KebindInfo"
+                callback = callback or function() end
                 local oldKey = first.Name
                 local keybindElement = Instance.new("TextButton")
                 local UICorner = Instance.new("UICorner")
@@ -2343,13 +2162,10 @@ function Kavo:NewWindow(argstable)
                 end)()
             end
 
-            function Elements:NewColorPicker(argstable)
-                
-                local colText = argstable.Name or "Colorpicker"
-                local colInf = argstable.Desc or "Example"
-                local defcolor = argstable.Default or Color3.fromRGB(1,1,1)
-                local callback = argstable.Function or function() end
-                
+            function Elements:NewColorPicker(colText, colInf, defcolor, callback)
+                colText = colText or "ColorPicker"
+                callback = callback or function() end
+                defcolor = defcolor or Color3.fromRGB(1,1,1)
                 local h, s, v = Color3.toHSV(defcolor)
                 local ms = game.Players.LocalPlayer:GetMouse()
                 local colorOpened = false
@@ -2806,7 +2622,7 @@ function Kavo:NewWindow(argstable)
                 rgb.MouseButton1Down:connect(function()colorpicker=true end)
                 dark.MouseButton1Down:connect(function()darknesss=true end)
                 uis.InputEnded:Connect(function(input)
-                    if input.UserInputType.Name == 'MouseButton1' or input.UserInputType == Enum.UserInputType.Touch then
+                    if input.UserInputType.Name == 'MouseButton1' then
                         if darknesss then darknesss = false end
                         if colorpicker then colorpicker = false end
                     end
