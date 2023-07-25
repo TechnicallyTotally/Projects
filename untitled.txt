@@ -1,3 +1,8 @@
+--[[
+ Made by luiztechtv
+ Original By Xheptc
+--]]
+
 local Kavo = {}
 
 local tween = game:GetService("TweenService")
@@ -16,7 +21,7 @@ function Kavo:DraggingEnabled(frame, parent)
     local dragInput, mousePos, framePos
 
     frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType.Name == 'Touch' then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             mousePos = input.Position
             framePos = parent.Position
@@ -30,7 +35,7 @@ function Kavo:DraggingEnabled(frame, parent)
     end)
 
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType.Name == 'Touch' then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
@@ -127,7 +132,9 @@ local SettingsT = {
 }
 
 local Name = "KavoConfig.JSON"
-
+if not isfile("KavoConfig.JSON") then
+   writefile(Name, "{}") 
+end
 pcall(function()
 
 if not pcall(function() readfile(Name) end) then
@@ -147,7 +154,7 @@ function Kavo:ToggleUI()
     end
 end
 
-function Kavo.CreateLib(kavName, themeList, hidebutton)
+function Kavo.CreateLib(kavName, themeList, introToggle)
     if not themeList then
         themeList = themes
     end
@@ -228,6 +235,7 @@ function Kavo.CreateLib(kavName, themeList, hidebutton)
     ScreenGui.ResetOnSpawn = false
 
     Main.Name = "Main"
+    Main.Active = true
     Main.Parent = ScreenGui
     Main.BackgroundColor3 = themeList.Background
     Main.ClipsDescendants = true
@@ -269,6 +277,58 @@ function Kavo.CreateLib(kavName, themeList, hidebutton)
     title.TextSize = 16.000
     title.TextXAlignment = Enum.TextXAlignment.Left
     
+    if introToggle then
+       local Intro = Instance.new("Frame")
+       Intro.Name = "Intro"
+       Intro.Parent = ScreenGui
+       Intro.BackgroundColor3 = Color3.new(0, 0, 0)
+       Intro.BackgroundTransparency = 0.5
+       Intro.Position = UDim2.new(0, 0, 0, 0)
+       Intro.Size = UDim2.new(1, 0, 1, 0)
+       Intro.ZIndex = 10
+       
+       local introText = Instance.new("TextLabel")
+       introText.Name = "IntroText"
+       introText.Parent = Intro
+       introText.BackgroundColor3 = Color3.new(0, 0, 0)
+       introText.BackgroundTransparency = 1
+       introText.Position = UDim2.new(0.5, -100, 0.5, -20)
+       introText.Size = UDim2.new(0, 200, 0, 40)
+       introText.Font = Enum.Font.Gotham
+       introText.Text = "Welcome to " .. kavName
+       introText.TextColor3 = Color3.new(1, 1, 1)
+       introText.TextSize = 18
+       introText.ZIndex = 11
+       local function TypeIntroText(text)
+           introText.Text = ""
+           for i = 1, #text do
+             introText.Text = string.sub(text, 1, i)
+             wait(0.05)
+           end
+       end
+       
+       local function StartGUI()
+           game.TweenService:Create(Intro, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+           wait(1)
+           Intro:Destroy()
+           
+           Main.Visible = true
+           Main.Enabled = true
+       end
+       
+       local introEnabled = true
+       
+       if introEnabled then
+          Intro.Visible = true
+          TypeIntroText("Welcome to " .. kavName .. "!")
+          StartGUI()
+       else
+          StartGUI()
+       end
+       
+       Main.Visible = false
+       Main.Enabled = false
+    end
     
     close.Name = "close"
     close.Parent = MainHeader
@@ -291,69 +351,21 @@ function Kavo.CreateLib(kavName, themeList, hidebutton)
         wait(1)
         ScreenGui:Destroy()
     end)
-    spawn(function()
-        do
-            if hidebutton then
-                local isHidden = false
-                local hideButton, unhideButton
-                
-                local function toggleVisibility()
-                    isHidden = not isHidden
-                    Main.Visible = not isHidden
-                    for _, element in ipairs(Main:GetDescendants()) do
-                        if element:IsA("GuiObject") then
-                            element.Visible = not isHidden
-                        end
-                    end
-                end
-                
-                hideButton = Instance.new("ImageButton")
-                hideButton.Name = "hideButton"
-                hideButton.Parent = MainHeader
-                hideButton.BackgroundTransparency = 1
-                hideButton.Position = UDim2.new(0.900, 0, 0.137, 0)
-                hideButton.Size = UDim2.new(0, 21, 0, 21)
-                hideButton.ZIndex = 2
-                hideButton.Image = "rbxassetid://3926305904"
-                hideButton.ImageRectOffset = Vector2.new(284, 4)
-                hideButton.ImageRectSize = Vector2.new(24, 24)
-                hideButton.MouseButton1Click:Connect(function()
-                   toggleVisibility()
-                   hideButton.Visible = false
-                   unhideButton.Visible = true
-                end)
-                
-                local function updateButtonPosition()
-                    if game:GetService("UserInputService").TouchEnabled then
-                       unhideButton.Position = UDim2.new(0, 10, 0, 10)
-                    else
-                       unhideButton.Position = UDim2.new(0.028, 0, 0.028, 0)
-                    end
-                end
-                
-                game:GetService("UserInputService").TouchEnabledChanged:Connect(updateButtonPosition)
-                updateButtonPosition()
-                
-                unhideButton = Instance.new("ImageButton")
-                unhideButton.Name = "unhideButton"
-                unhideButton.Parent = MainHeader
-                unhideButton.BackgroundTransparency = 0
-                unhideButton.Position = UDim2.new(0.028, 0, 0.028, 0)
-                unhideButton.Size = UDim2.new(0, 40, 0, 40)
-                unhideButton.ZIndex = 2
-                unhideButton.Visible = false
-                unhideButton.Image = "rbxassetid://3926305904"
-                unhideButton.ImageRectOffset = Vector2.new(4, 4)
-                unhideButton.ImageRectSize = Vector2.new(16, 16)
-                unhideButton.MouseButton1Click:Connect(function()
-                   toggleVisibility()
-                   unhideButton.Visible = false
-                   hideButton.Visible = true
-                end)
-            end
-        end
-    end)
-                
+    
+    local glowFrame = Instance.new("Frame")
+    glowFrame.Name = "GlowFrame"
+    glowFrame.Parent = Main
+    glowFrame.BackgroundColor3 = themeList.SchemeColor -- Use the SchemeColor from the themeList as the glow color
+    glowFrame.BackgroundTransparency = 0.5 -- Adjust the transparency as desired. Lower values make it more visible.
+    glowFrame.Position = UDim2.new(-0.05, 0, -0.05, 0)
+    glowFrame.Size = UDim2.new(1.1, 0, 1.1, 0)
+    glowFrame.ZIndex = 0
+
+    local blurEffect = Instance.new("BlurEffect")
+    blurEffect.Name = "GlowEffect"
+    blurEffect.Parent = glowFrame
+    blurEffect.Size = 24 -- Adjust the blur size as desired. Larger values create a stronger glow effect.
+    
     MainSide.Name = "MainSide"
     MainSide.Parent = Main
     MainSide.BackgroundColor3 = themeList.Header
@@ -1482,7 +1494,7 @@ function Kavo.CreateLib(kavName, themeList, hidebutton)
                             sliderDrag:TweenSize(UDim2.new(0, math.clamp(mouse.X - sliderDrag.AbsolutePosition.X, 0, 149), 0, 6), "InOut", "Linear", 0.05, true)
                         end)
                         releaseconnection = uis.InputEnded:Connect(function(Mouse)
-                            if Mouse.UserInputType == Enum.UserInputType.MouseButton1 or Mouse.UserInputType.Name == 'Touch' then
+                            if Mouse.UserInputType == Enum.UserInputType.MouseButton1 or Mouse.UserInputType == Enum.UserInputType.Touch then
                                 Value = math.floor((((tonumber(maxvalue) - tonumber(minvalue)) / 149) * sliderDrag.AbsoluteSize.X) + tonumber(minvalue))
                                 pcall(function()
                                     callback(Value)
@@ -2647,7 +2659,7 @@ function Kavo.CreateLib(kavName, themeList, hidebutton)
                 rgb.MouseButton1Down:connect(function()colorpicker=true end)
                 dark.MouseButton1Down:connect(function()darknesss=true end)
                 uis.InputEnded:Connect(function(input)
-                    if input.UserInputType.Name == 'MouseButton1' or input.UserInputType.Name == 'Touch' then
+                    if input.UserInputType.Name == 'MouseButton1' then
                         if darknesss then darknesss = false end
                         if colorpicker then colorpicker = false end
                     end
