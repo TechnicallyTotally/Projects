@@ -323,6 +323,16 @@ function Kavo.CreateLib(kavName, themeList, hidebutton)
                    unhideButton.Visible = true
                 end)
                 
+                local function updateButtonPosition()
+                    if game:GetService("UserInputService").TouchEnabled then
+                       unhideButton.Position = UDim2.new(0, 10, 0, 10)
+                    else
+                       unhideButton.Position = UDim2.new(0.028, 0, 0.028, 0)
+                    end
+                end
+                
+                game:GetService("UserInputService").TouchEnabledChanged:Connect(updateButtonPosition)
+                updateButtonPosition()
                 
                 unhideButton = Instance.new("ImageButton")
                 unhideButton.Name = "unhideButton"
