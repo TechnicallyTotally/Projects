@@ -319,6 +319,8 @@ function Kavo.CreateLib(kavName, themeList, introToggle)
        local introEnabled = true
        
        if introEnabled then
+          Main.Visible = false
+          Main.Enabled = false
           Intro.Visible = true
           TypeIntroText("Welcome to " .. kavName .. "!")
           StartGUI()
@@ -326,8 +328,7 @@ function Kavo.CreateLib(kavName, themeList, introToggle)
           StartGUI()
        end
        
-       Main.Visible = false
-       Main.Enabled = false
+       
     end
     
     close.Name = "close"
